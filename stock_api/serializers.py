@@ -30,3 +30,11 @@ class StockPriceSerializer(serializers.ModelSerializer):
         model = StockPrice
         fields = ['id', 'symbol', 'open_price', 'high_price', 'low_price', 'previous_price',
                   'close_price', 'percentage_change', 'total_volume', 'date']
+
+
+class CompanyWithPriceSerializer(serializers.ModelSerializer):
+    price_list: StockPriceSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Company
+        fields = ['id', 'name', 'sector', 'price_list']
