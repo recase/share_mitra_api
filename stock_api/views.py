@@ -28,7 +28,7 @@ class SectorViewSet(viewsets.ViewSet):
 
 # class CompanyViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
 class CompanyViewSet(viewsets.ViewSet):
-    queryset = Company.objects.all()
+    queryset = Company.company_objects.all()
 
     def list(self, requset):
         company_serializer = CompanySerializer(self.queryset, many=True)
@@ -50,11 +50,11 @@ class CompanyViewSet(viewsets.ViewSet):
 
 
 class LivePirceViewSet(viewsets.ViewSet):
-    quuerset = LivePirce.objects.all()
+    quuerset = LivePirce.custom_objects.all()
 
     def list(self, request):
         serializer = LivePriceSerializer(self.quuerset, many=True)
-        return Response(serializer.data)
+        return Response({'stocks': serializer.data, 'date': datetime.datetime.now()})
 
 
 class StockPriceViewSet(viewsets.ViewSet):
@@ -62,17 +62,17 @@ class StockPriceViewSet(viewsets.ViewSet):
 
     def list(self, request):
         last_Stock_table_updated = StockUpdateTable.objects.filter(
-            setting='stock table updated at').first()
+            setting='stock_table_updated_at').first()
         if last_Stock_table_updated is not None:
             last_updated_date = datetime.datetime.strptime(
                 last_Stock_table_updated.value, '%Y-%m-%d').date()
             stocks = retrieve_stock_price_list(date=last_updated_date)
             serializer = StockPriceSerializer(stocks, many=True)
-            return Response(serializer.data)
+            return Response({'stocks_price': serializer.data, 'date': last_updated_date})
         else:
             return Response(data="Stock price not found", status=status.HTTP_404_NOT_FOUND)
 
-    @action(methods=['get'], detail=False, url_path='stock-history/(?P<date>\w+)', url_name='stock_history')
+    @ action(methods=['get'], detail=False, url_path='stock-history/(?P<date>\w+)', url_name='stock_history')
     def stock_history(self, request, date):
         print(date)
         print('hello')
