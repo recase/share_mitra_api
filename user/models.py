@@ -15,7 +15,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     email = models.EmailField(gettext_lazy('Email address'), unique=True)
     first_name = models.CharField(max_length=50)
-    middle_name = models.CharField(max_length=50)
+    middle_name = models.CharField(
+        max_length=50, null=True, blank=True, default=None)
     last_name = models.CharField(max_length=50)
     role = models.CharField(choices=ROLES, default=USER, max_length=30)
     date_joined = models.DateTimeField(auto_now_add=True)
