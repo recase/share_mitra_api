@@ -19,7 +19,7 @@ from rest_framework.documentation import include_docs_urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('user/', include('user.urls', namespace="user")),
+    path('api/', include('user.urls', namespace="user")),
     path('api/', include('stock_api.urls', namespace="stock_api")),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('doc', include_docs_urls(title="shareMitraAPI"))
