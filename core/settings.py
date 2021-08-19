@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     # own apps
     'stock_api',
     'user',
+    'portfolio',
 ]
 
 MIDDLEWARE = [

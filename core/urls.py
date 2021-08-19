@@ -21,6 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('user.urls', namespace="user")),
     path('api/', include('stock_api.urls', namespace="stock_api")),
+    path('api/', include('portfolio.urls', namespace="portfolio_api")),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('doc', include_docs_urls(title="shareMitraAPI"))
 ]
