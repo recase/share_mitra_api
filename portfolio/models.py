@@ -16,6 +16,7 @@ class Portfolio(models.Model):
             models.UniqueConstraint(
                 fields=['company', 'user'], name='stock user company')
         ]
+        ordering = ['company__name']
 
 
 class Transaction(models.Model):
@@ -59,6 +60,7 @@ class Transaction(models.Model):
 
     class Meta:
         db_table = 'stock_transaction'
+        ordering = ['transaction_date']
 
     def save(self, *args, **kwargs):
         on_market = [self.BUY, self.SELL]
