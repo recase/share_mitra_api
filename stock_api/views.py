@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from .models import Company, LivePirce, Sector, StockPrice, StockUpdateTable
-from .serializers import CompanySerializer, CompanyWithPriceSerializer, LivePriceSerializer, SectorSerializer, StockPriceSerializer
+from .serializers import CompanyListingSerializer, CompanySerializer, CompanyWithPriceSerializer, LivePriceSerializer, SectorSerializer, StockPriceSerializer
 import datetime
 from .helper.stock_price_list import retrieve_stock_price_list, retrieve_stock_price_history
 from django.core.exceptions import ObjectDoesNotExist
@@ -38,6 +38,11 @@ class CompanyViewSet(viewsets.ViewSet):
         company = self.queryset.filter(id=pk)
         company_serializer = CompanySerializer(company)
         return Response(company_serializer.data)
+
+    @action(methods=['get'], detail=False, url_path="listing-data", url_name="listing_data")
+    def listing_data(self, request):
+        company_serializer = CompanyListingSerializer(self.queryset, many=True)
+        return Response(company_serializer.data, status=status.HTTP_200_OK)
 
     @action(methods=['get'], detail=True, url_path='price-history', url_name="price_history")
     def price_history(self, request, pk=None):
