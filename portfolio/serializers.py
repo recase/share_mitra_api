@@ -8,21 +8,22 @@ import datetime
 
 
 class TransactionSerializer(serializers.ModelSerializer):
-    investment = serializers.SerializerMethodField(read_only=True)
-    total_investment = serializers.SerializerMethodField(read_only=True)
-    sold_amount = serializers.SerializerMethodField(read_only=True)
-    receivable_amount = serializers.SerializerMethodField(read_only=True)
+    investment = serializers.SerializerMethodField()
+    total_investment = serializers.SerializerMethodField()
+    sold_amount = serializers.SerializerMethodField()
+    receivable_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = Transaction
-        fields = ['id', 'units', 'cost_per_unit', 'bonus_amount', 'transaction_type', 'transaction_date', 'capital_gain_tax', 'casba_charge',
+        fields = ['id', 'units', 'portfolio', 'cost_per_unit', 'bonus_amount', 'transaction_type', 'transaction_date', 'capital_gain_tax', 'casba_charge',
                   'auction_charge', 'dp_charge', 'broker_charge', 'sebon_charge', 'investment', 'total_investment', 'sold_amount', 'receivable_amount']
         read_only_fields = ['capital_gain_tax', 'dp_charge',
                             'broker_charge', 'sebon_charge']
-        extra_kwargs = {'id': {'read_only': False, 'required': False}}
+        extra_kwargs = {'id': {'read_only': False,
+                               'required': False}}
 
     def get_investment(self, transaction):
-        if transaction.transaction_type is not Transaction.SELL and transaction.units is not None and transaction.cost_per_unit is not None:
+        if transaction.transaction_type != Transaction.SELL and transaction.units is not None and transaction.cost_per_unit is not None:
             return transaction.units * transaction.cost_per_unit
 
     def get_total_investment(self, transaction):
@@ -42,7 +43,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         return round(total_investment, 2)
 
     def get_sold_amount(self, transaction):
-        if transaction.transaction_type is Transaction.SELL:
+        if transaction.transaction_type == Transaction.SELL and transaction.units is not None and transaction.cost_per_unit is not None:
             return transaction.units * transaction.cost_per_unit
 
     def get_receivable_amount(self, transaction):
@@ -51,10 +52,10 @@ class TransactionSerializer(serializers.ModelSerializer):
             return None
         if transaction.dp_charge is not None:
             receivable_amount = receivable_amount - transaction.dp_charge
-        if transaction.auction_charge is not None:
-            receivable_amount = receivable_amount - transaction.auction_charge
-        if transaction.casba_charge is not None:
-            receivable_amount = receivable_amount - transaction.casba_charge
+        if transaction.sebon_charge is not None:
+            receivable_amount = receivable_amount - transaction.sebon_charge
+        if transaction.broker_charge is not None:
+            receivable_amount = receivable_amount - transaction.broker_charge
         return round(receivable_amount, 2)
 
     def validate(self, attrs):
@@ -149,14 +150,15 @@ class PortfolioSerializer(serializers.ModelSerializer):
         return self.append_profit_loss_to_portfolio(data)
 
     def append_profit_loss_to_portfolio(self, data):
-        data['over_all_profilt_loss'] = (data['total_units'] * data['ltp']) + (
+        data['current_value'] = data['total_units'] * data['ltp']
+        data['over_all_profit_loss'] = (data['current_value']) + (
             data['total_received_amount'] + data['total_dividend_amount']) - (data['total_investment'])
         previous_balance = (data['total_units'] * data['previous_close_price']) + (
             data['total_received_amount'] + data['total_dividend_amount']) - (data['total_investment'])
-        data['todays_profit_loss'] = data['over_all_profilt_loss'] - \
+        data['todays_profit_loss'] = data['over_all_profit_loss'] - \
             previous_balance
         data['over_all_profit_loss_percentage'] = round((
-            data['over_all_profilt_loss']/(data['total_investment']))*100, 2)
+            data['over_all_profit_loss']/(data['total_investment']))*100, 2)
         return data
 
     def get_close_prices(self, portfolio):
