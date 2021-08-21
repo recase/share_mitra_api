@@ -1,8 +1,8 @@
-from portfolio.serializers import PortfolioSerializer
+from portfolio.serializers import PortfolioSerializer, TransactionSerializer
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, IsAuthenticated
-from .models import Portfolio
+from .models import Portfolio, Transaction
 
 
 class UserAuthorizedPortfolio(BasePermission):
@@ -10,6 +10,14 @@ class UserAuthorizedPortfolio(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return obj.user == request.user or request.user.is_superuser
+
+
+class UserAuthorizedTransaction(BasePermission):
+    message = "You dont have permission for the transaction"
+
+    def has_object_permission(self, request, view, obj):
+        portfolio = obj.portfolio
+        return portfolio.user == request.user
 
 
 class PortfolioView(viewsets.ViewSet):
@@ -31,7 +39,7 @@ class PortfolioView(viewsets.ViewSet):
         queryset = self.queryset.filter(user=request.user)
 
         serialized_data = PortfolioSerializer(queryset, many=True)
-        return Response(serialized_data.data, status=status.HTTP_200_OK)
+        return Response({'protfolios': serialized_data.data}, status=status.HTTP_200_OK)
 
     def create(self, request, format='json'):
         try:
@@ -64,3 +72,35 @@ class PortfolioView(viewsets.ViewSet):
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
             return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TransactionView(viewsets.ViewSet):
+    queryset = Transaction.objects.all()
+    permission_classes = [IsAuthenticated & UserAuthorizedTransaction]
+
+    def create(self, request):
+        serialized_data = TransactionSerializer(data=request.data)
+        if serialized_data.is_valid():
+            serialized_data.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, pk=None):
+        try:
+            instance = self.queryset.get(pk=pk)
+            serialzed_data = TransactionSerializer(
+                instance=instance, data=request.data)
+            if serialzed_data.is_valid():
+                serialzed_data.save()
+                return Response(status=status.HTTP_200_OK)
+            return Response(serialzed_data.erros, status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk=None):
+        try:
+            instance = self.queryset.get(pk=pk)
+            instance.delete()
+            return Response(status=status.HTTP_200_OK)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
