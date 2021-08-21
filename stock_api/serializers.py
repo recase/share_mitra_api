@@ -1,3 +1,4 @@
+from portfolio import models
 from rest_framework import serializers
 from .models import Company, Sector, LivePirce, StockPrice
 
@@ -15,6 +16,18 @@ class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = ['id', 'name', 'symbol', 'sector']
+
+
+class CompanyListingSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Company
+        fields = ['id', 'name']
+        read_only_fields = ['id']
+
+    def get_name(self, company):
+        return f'({company.symbol}) {company.name}'
 
 
 class LivePriceSerializer(serializers.ModelSerializer):
