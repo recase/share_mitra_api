@@ -19,8 +19,8 @@ class TransactionSerializer(serializers.ModelSerializer):
                   'auction_charge', 'dp_charge', 'broker_charge', 'sebon_charge', 'investment', 'total_investment', 'sold_amount', 'receivable_amount']
         read_only_fields = ['capital_gain_tax', 'dp_charge',
                             'broker_charge', 'sebon_charge']
-        extra_kwargs = {'id': {'read_only': False,
-                               'required': False}}
+        extra_kwargs = {'id': {'read_only': False, 'required': False},
+                        'portfolio': {'write_only': True, 'required': False}}
 
     def get_investment(self, transaction):
         if transaction.transaction_type != Transaction.SELL and transaction.units is not None and transaction.cost_per_unit is not None:
