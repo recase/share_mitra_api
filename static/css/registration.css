@@ -1,0 +1,12 @@
+.activate-email-container {
+	padding: 16px;
+}
+
+.activate-email-container .greeting {
+	font-weight: 600;
+}
+
+.activate-email-container .body .link {
+	color: blue;
+	font-style: italic;
+}
