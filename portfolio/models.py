@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from stock_api.models import Company
 from django.contrib.auth import get_user_model
@@ -87,3 +88,86 @@ class Transaction(models.Model):
             return 0.3
         else:
             return 0.27
+
+
+class WatchList(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="watchlist")
+    company = models.ForeignKey(
+        Company, on_delete=models.CASCADE, related_name="watchlist")
+    notes = models.TextField(default=None, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+
+class Alert(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="alerts")
+    company = models.ForeignKey(
+        Company, on_delete=models.CASCADE, related_name="alerts")
+    notes = models.TextField(default=None, null=True, blank=True)
+    exact_price = models.FloatField(null=True, blank=True, default=None)
+    min_price = models.FloatField(null=True, blank=True, default=None)
+    max_price = models.FloatField(null=True, blank=True, default=None)
+    notify = models.BooleanField(default=False)
+    notify_min = models.BooleanField(default=False)
+    notify_max = models.BooleanField(default=False)
+    enable_notification = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def clean(self):
+        if self.exact_price is not None:
+            if self.exact_price < 0:
+                return ValidationError('price value', 'value cannot be negative')
+
+            self.max_price = None
+            self.min_price = None
+
+        elif self.min_price is not None and self.max_price is not None:
+            if self.min_price < 0 or self.max_price < 0:
+                return ValidationError('price value', 'value cannot be negative')
+
+            if self.max_price < self.min_price:
+                return ValidationError('price value', 'maximum value cannot be less than minimum value')
+
+            self.exact_price = None
+        else:
+            return ValidationError('price value', 'price value required')
+
+    class Meta:
+        ordering = ['company__symbol']
+
+
+class TargetStopLoss(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="targetStopLoss")
+    company = models.ForeignKey(
+        Company, on_delete=models.CASCADE, related_name='targetStopLoss')
+    notes = models.TextField(null=True, blank=True, default=None)
+    stop_loss = models.FloatField(null=True, blank=True, default=None)
+    target = models.FloatField(null=True, blank=True, default=None)
+    notify_target = models.BooleanField(default=False)
+    notify_stop_loss = models.BooleanField(default=False)
+    enable_notification = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def clean(self):
+        if self.stop_loss is not None and self.target is not None:
+            if self.stop_loss < 0 or self.target < 0:
+                return ValidationError('price value', 'value cannot be negative')
+
+            if self.target < self.stop_loss:
+                return ValidationError('price value', 'maximum value cannot be less than minimum value')
+        else:
+            return ValidationError('price value', 'price value required')
+
+    class Meta:
+        ordering = ['company__symbol']
