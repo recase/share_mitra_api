@@ -1,6 +1,6 @@
 from stock_api.serializers import CompanySerializer
 from rest_framework import serializers
-from .models import Transaction, Portfolio
+from .models import Alert, TargetStopLoss, Transaction, Portfolio, WatchList
 from stock_api.models import Company, LivePirce, StockPrice
 from django.db.models import Sum, F
 from django.db.models.functions import Coalesce
@@ -245,3 +245,69 @@ class PortfolioSerializer(serializers.ModelSerializer):
                 transaction.delete()
 
         return instance
+
+
+class AlertSerializer(serializers.ModelSerializer):
+    symbol = serializers.SerializerMethodField()
+    company_name = serializers.SerializerMethodField()
+    company_id = serializers.PrimaryKeyRelatedField(
+        source='company', queryset=Company.objects.all())
+    user = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = Alert
+        fields = ['id', 'company_id', 'symbol', 'company_name', 'notes',
+                  'exact_price', 'min_price', 'max_price', 'user', 'enable_notification']
+        read_only_fields = ['id']
+
+    def get_symbol(self, alert):
+        return alert.company.symbol
+
+    def get_company_name(Self, alert):
+        return alert.company.name
+
+
+class WatchListSerializer(serializers.ModelSerializer):
+    symbol = serializers.SerializerMethodField()
+    company_name = serializers.SerializerMethodField()
+    company_id = serializers.PrimaryKeyRelatedField(
+        source='company', queryset=Company.objects.all())
+    user = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = WatchList
+        fields = ['id', 'company_id', 'symbol',
+                  'company_name', 'notes', 'user']
+        read_only_fields = ['id']
+
+    def get_symbol(self, alert):
+        return alert.company.symbol
+
+    def get_company_name(Self, alert):
+        return alert.company.name
+
+
+class TargetStopLossSerializer(serializers.ModelSerializer):
+    symbol = serializers.SerializerMethodField()
+    company_name = serializers.SerializerMethodField()
+    company_id = serializers.PrimaryKeyRelatedField(
+        source='company', queryset=Company.objects.all())
+    user = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = TargetStopLoss
+        fields = ['id', 'company_id', 'symbol', 'enable_notification',
+                  'company_name', 'notes', 'stop_loss', 'target', 'user']
+        read_only_fields = ['id']
+
+    def get_symbol(self, alert):
+        return alert.company.symbol
+
+    def get_company_name(Self, alert):
+        return alert.company.name

@@ -1,8 +1,9 @@
-from portfolio.serializers import PortfolioSerializer, TransactionSerializer
-from rest_framework import viewsets, status
+from rest_framework.decorators import permission_classes
+from portfolio.serializers import AlertSerializer, PortfolioSerializer, TargetStopLossSerializer, TransactionSerializer, WatchListSerializer
+from rest_framework import viewsets, status, mixins
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, IsAuthenticated
-from .models import Portfolio, Transaction
+from .models import Alert, Portfolio, TargetStopLoss, Transaction, WatchList
 
 
 class UserAuthorizedPortfolio(BasePermission):
@@ -10,6 +11,27 @@ class UserAuthorizedPortfolio(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return obj.user == request.user or request.user.is_superuser
+
+
+class UserAuthorizedAlert(BasePermission):
+    message = "You dont have permission for the alert"
+
+    def has_object_permission(self, request, view, obj):
+        return obj.user == request.user
+
+
+class UserAuthorizedWatchList(BasePermission):
+    message = "You dont have permission for the watchlist"
+
+    def has_object_permission(self, request, view, obj):
+        return obj.user == request.user
+
+
+class UserAuthorizedTargetLoss(BasePermission):
+    message = "You dont have permission for the target loss"
+
+    def has_object_permission(self, request, view, obj):
+        return obj.user == request.user
 
 
 class UserAuthorizedTransaction(BasePermission):
@@ -104,3 +126,36 @@ class TransactionView(viewsets.ViewSet):
             return Response(status=status.HTTP_200_OK)
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class AlertView(mixins.CreateModelMixin,
+                mixins.ListModelMixin,
+                mixins.UpdateModelMixin,
+                mixins.RetrieveModelMixin,
+                mixins.DestroyModelMixin,
+                viewsets.GenericViewSet):
+    queryset = Alert.objects.all()
+    permission_classes = [IsAuthenticated, UserAuthorizedAlert]
+    serializer_class = AlertSerializer
+
+
+class WatchListView(mixins.CreateModelMixin,
+                    mixins.RetrieveModelMixin,
+                    mixins.ListModelMixin,
+                    mixins.UpdateModelMixin,
+                    mixins.DestroyModelMixin,
+                    viewsets.GenericViewSet):
+    queryset = WatchList.objects.all()
+    permission_classes = [IsAuthenticated, UserAuthorizedWatchList]
+    serializer_class = WatchListSerializer
+
+
+class TargetStopLossView(mixins.CreateModelMixin,
+                         mixins.RetrieveModelMixin,
+                         mixins.ListModelMixin,
+                         mixins.UpdateModelMixin,
+                         mixins.DestroyModelMixin,
+                         viewsets.GenericViewSet):
+    queryset = TargetStopLoss.objects.all()
+    permission_classes = [IsAuthenticated, UserAuthorizedTargetLoss]
+    serializer_class = TargetStopLossSerializer
